@@ -93,4 +93,54 @@ export { Wrapped__HonoIsladComponent__ as default };`
 export { WrappedExportViaVariable as default };`
     )
   })
+
+  it('export named variable', () => {
+    const code = `export const NamedVariable = () => {
+      return <h1>Hello</h1>
+    }`
+    const result = transformJsxTags(code, 'NamedVariable.tsx')
+    expect(result).toBe(
+      `const NamedVariable = () => {
+  return <h1>Hello</h1>;
+};
+const WrappedNamedVariable = function (props) {
+  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
+};
+export { WrappedNamedVariable as NamedVariable };`
+    )
+  })
+
+  it('export named variable via specifier', () => {
+    const code = `const NamedVariable = () => {
+      return <h1>Hello</h1>
+    };
+    export { NamedVariable }`
+    const result = transformJsxTags(code, 'NamedVariable.tsx')
+    expect(result).toBe(
+      `const NamedVariable = () => {
+  return <h1>Hello</h1>;
+};
+const WrappedNamedVariable = function (props) {
+  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
+};
+export { WrappedNamedVariable as NamedVariable };`
+    )
+  })
+
+  it('export named variable via specifier with "as"', () => {
+    const code = `const NamedVariable = () => {
+      return <h1>Hello</h1>
+    };
+    export { NamedVariable as MyNamedComponent }`
+    const result = transformJsxTags(code, 'NamedVariable.tsx')
+    expect(result).toBe(
+      `const NamedVariable = () => {
+  return <h1>Hello</h1>;
+};
+const WrappedNamedVariable = function (props) {
+  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
+};
+export { WrappedNamedVariable as MyNamedComponent };`
+    )
+  })
 })

@@ -4,10 +4,12 @@ import _generate from '@babel/generator'
 // @ts-ignore
 const generate = (_generate.default as typeof _generate) ?? _generate
 import { parse } from '@babel/parser'
+import type { NodePath } from '@babel/traverse'
 import _traverse from '@babel/traverse'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 const traverse = (_traverse.default as typeof _traverse) ?? _traverse
+import type { ExportDefaultDeclaration, ExportNamedDeclaration } from '@babel/types'
 import {
   identifier,
   jsxAttribute,
@@ -110,54 +112,96 @@ export const transformJsxTags = (contents: string, componentName: string) => {
 
   if (ast) {
     const exports: Record<string, string> = {}
-    traverse(ast, {
-      ExportDefaultDeclaration(path) {
-        const declarationType = path.node.declaration.type
+    const transformExport = (path: NodePath<ExportNamedDeclaration | ExportDefaultDeclaration>) => {
+      const declarationType = path.node.declaration?.type
 
-        if (
-          declarationType === 'FunctionDeclaration' ||
-          declarationType === 'FunctionExpression' ||
-          declarationType === 'ArrowFunctionExpression' ||
-          declarationType === 'Identifier'
-        ) {
-          const functionName =
-            declarationType === 'Identifier'
-              ? path.node.declaration.name
-              : ((declarationType === 'FunctionDeclaration' ||
-                  declarationType === 'FunctionExpression') &&
-                  path.node.declaration.id?.name) ||
-                '__HonoIsladComponent__'
+      if (declarationType === 'VariableDeclaration') {
+        // export const Component = () => <div></div>
 
-          let originalFunctionId
-          if (declarationType === 'Identifier') {
-            originalFunctionId = path.node.declaration
-          } else {
-            originalFunctionId = identifier(functionName + 'Original')
+        path.insertBefore(path.node.declaration)
+      } else if ('specifiers' in path.node && path.node.specifiers.length > 0) {
+        // export { Component as default, Component2 as Component3, Component4 }
 
-            const originalFunction = functionExpression(
-              null,
-              path.node.declaration.params,
-              path.node.declaration.body.type === 'BlockStatement'
-                ? path.node.declaration.body
-                : blockStatement([returnStatement(path.node.declaration.body)])
-            )
-            originalFunction.async = path.node.declaration.async
-
+        for (const specifier of path.node.specifiers) {
+          if (specifier.type === 'ExportSpecifier') {
+            const wrappedFunction = addSSRCheck(specifier.local.name, componentName)
+            const wrappedFunctionId = identifier('Wrapped' + specifier.local.name)
             path.insertBefore(
-              variableDeclaration('const', [
-                variableDeclarator(originalFunctionId, originalFunction),
-              ])
+              variableDeclaration('const', [variableDeclarator(wrappedFunctionId, wrappedFunction)])
             )
-          }
 
-          const wrappedFunction = addSSRCheck(originalFunctionId.name, componentName)
-          const wrappedFunctionId = identifier('Wrapped' + functionName)
-          exports.default = wrappedFunctionId.name
-          path.replaceWith(
-            variableDeclaration('const', [variableDeclarator(wrappedFunctionId, wrappedFunction)])
+            const exportAs =
+              specifier.exported.type === 'StringLiteral'
+                ? specifier.exported.value
+                : specifier.exported.name
+            exports[exportAs] = wrappedFunctionId.name
+          }
+        }
+        path.remove()
+        return
+      }
+
+      if (
+        declarationType === 'FunctionDeclaration' ||
+        declarationType === 'FunctionExpression' ||
+        declarationType === 'ArrowFunctionExpression' ||
+        declarationType === 'Identifier' ||
+        declarationType === 'VariableDeclaration'
+      ) {
+        if (
+          declarationType === 'VariableDeclaration' &&
+          !('name' in path.node.declaration.declarations[0].id)
+        ) {
+          // unsupported
+          return
+        }
+
+        const functionName =
+          (declarationType === 'VariableDeclaration'
+            ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (path.node.declaration.declarations[0].id as any).name
+            : declarationType === 'Identifier'
+              ? path.node.declaration.name
+              : (declarationType === 'FunctionDeclaration' ||
+                  declarationType === 'FunctionExpression') &&
+                path.node.declaration.id?.name) || '__HonoIsladComponent__'
+
+        let originalFunctionId
+        if (declarationType === 'Identifier') {
+          originalFunctionId = path.node.declaration
+        } else if (declarationType === 'VariableDeclaration') {
+          originalFunctionId = path.node.declaration.declarations[0].id
+        } else {
+          originalFunctionId = identifier(functionName + 'Original')
+
+          const originalFunction = functionExpression(
+            null,
+            path.node.declaration.params,
+            path.node.declaration.body.type === 'BlockStatement'
+              ? path.node.declaration.body
+              : blockStatement([returnStatement(path.node.declaration.body)])
+          )
+          originalFunction.async = path.node.declaration.async
+
+          path.insertBefore(
+            variableDeclaration('const', [variableDeclarator(originalFunctionId, originalFunction)])
           )
         }
-      },
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const wrappedFunction = addSSRCheck((originalFunctionId as any).name, componentName)
+        const wrappedFunctionId = identifier('Wrapped' + functionName)
+        exports[path.node.type === 'ExportDefaultDeclaration' ? 'default' : functionName] =
+          wrappedFunctionId.name
+        path.replaceWith(
+          variableDeclaration('const', [variableDeclarator(wrappedFunctionId, wrappedFunction)])
+        )
+      }
+    }
+
+    traverse(ast, {
+      ExportNamedDeclaration: transformExport,
+      ExportDefaultDeclaration: transformExport,
     })
 
     if (Object.keys(exports).length !== 0) {
