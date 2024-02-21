@@ -30,7 +30,7 @@ export default WrappedBadge;`
       `const AsyncComponentOriginal = async function () {
   return <h1>Hello</h1>;
 };
-const WrappedAsyncComponent = async function (props) {
+const WrappedAsyncComponent = function (props) {
   return import.meta.env.SSR ? <honox-island component-name="AsyncComponent.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><AsyncComponentOriginal {...props}></AsyncComponentOriginal>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <AsyncComponentOriginal {...props}></AsyncComponentOriginal>;
 };
 export default WrappedAsyncComponent;`
@@ -46,7 +46,7 @@ export default WrappedAsyncComponent;`
       `const __HonoIsladComponent__Original = async function () {
   return <h1>Hello</h1>;
 };
-const Wrapped__HonoIsladComponent__ = async function (props) {
+const Wrapped__HonoIsladComponent__ = function (props) {
   return import.meta.env.SSR ? <honox-island component-name="UnnamedComponent.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>;
 };
 export default Wrapped__HonoIsladComponent__;`
