@@ -124,16 +124,20 @@ export const transformJsxTags = (contents: string, componentName: string) => {
 
         for (const specifier of path.node.specifiers) {
           if (specifier.type === 'ExportSpecifier') {
-            const wrappedFunction = addSSRCheck(specifier.local.name, componentName)
+            const exportAs =
+              specifier.exported.type === 'StringLiteral'
+                ? specifier.exported.value
+                : specifier.exported.name
+
+            const wrappedFunction = addSSRCheck(
+              specifier.local.name,
+              componentName + (exportAs === 'default' ? '' : `#${exportAs}`)
+            )
             const wrappedFunctionId = identifier('Wrapped' + specifier.local.name)
             path.insertBefore(
               variableDeclaration('const', [variableDeclarator(wrappedFunctionId, wrappedFunction)])
             )
 
-            const exportAs =
-              specifier.exported.type === 'StringLiteral'
-                ? specifier.exported.value
-                : specifier.exported.name
             exports[exportAs] = wrappedFunctionId.name
           }
         }

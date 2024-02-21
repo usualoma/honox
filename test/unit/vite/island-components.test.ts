@@ -121,7 +121,7 @@ export { WrappedNamedVariable as NamedVariable };`
   return <h1>Hello</h1>;
 };
 const WrappedNamedVariable = function (props) {
-  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
+  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx#NamedVariable" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
 };
 export { WrappedNamedVariable as NamedVariable };`
     )
@@ -138,7 +138,7 @@ export { WrappedNamedVariable as NamedVariable };`
   return <h1>Hello</h1>;
 };
 const WrappedNamedVariable = function (props) {
-  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
+  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx#MyNamedComponent" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
 };
 export { WrappedNamedVariable as MyNamedComponent };`
     )

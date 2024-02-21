@@ -4,7 +4,7 @@ import { COMPONENT_NAME, DATA_HONO_TEMPLATE, DATA_SERIALIZED_PROPS } from '../co
 import type { CreateElement, CreateChildren, Hydrate } from '../types.js'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FileCallback = () => Promise<{ default: Promise<any> }>
+type FileCallback = () => Promise<Record<string, any>>
 
 export type ClientOptions = {
   hydrate?: Hydrate
@@ -23,13 +23,14 @@ export const createClient = async (options?: ClientOptions) => {
 
   const hydrateComponent = async () => {
     const filePromises = Object.keys(FILES).map(async (filePath) => {
-      const componentName = filePath.replace(root, '')
-      const elements = document.querySelectorAll(`[${COMPONENT_NAME}="${componentName}"]`)
+      const componentFileName = filePath.replace(root, '')
+      const elements = document.querySelectorAll(`[${COMPONENT_NAME}^="${componentFileName}"]`)
       if (elements) {
         const elementPromises = Array.from(elements).map(async (element) => {
           const fileCallback = FILES[filePath] as FileCallback
           const file = await fileCallback()
-          const Component = await file.default
+          const name = (element.getAttribute(COMPONENT_NAME) as string).split(/#/)[1] ?? 'default'
+          const Component = file[name]
 
           const serializedProps = element.attributes.getNamedItem(DATA_SERIALIZED_PROPS)?.value
           const props = JSON.parse(serializedProps ?? '{}') as Record<string, unknown>
