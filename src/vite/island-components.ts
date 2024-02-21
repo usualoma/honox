@@ -24,9 +24,9 @@ import {
   returnStatement,
   jsxSpreadAttribute,
   jsxExpressionContainer,
-  exportDefaultDeclaration,
   conditionalExpression,
   memberExpression,
+  exportNamedDeclaration,
 } from '@babel/types'
 // eslint-disable-next-line node/no-extraneous-import
 import type { Plugin } from 'vite'
@@ -109,46 +109,71 @@ export const transformJsxTags = (contents: string, componentName: string) => {
   })
 
   if (ast) {
+    const exports: Record<string, string> = {}
     traverse(ast, {
       ExportDefaultDeclaration(path) {
         const declarationType = path.node.declaration.type
+
         if (
           declarationType === 'FunctionDeclaration' ||
           declarationType === 'FunctionExpression' ||
-          declarationType === 'ArrowFunctionExpression'
+          declarationType === 'ArrowFunctionExpression' ||
+          declarationType === 'Identifier'
         ) {
           const functionName =
-            ((declarationType === 'FunctionDeclaration' ||
-              declarationType === 'FunctionExpression') &&
-              path.node.declaration.id?.name) ||
-            '__HonoIsladComponent__'
-          const isAsync = path.node.declaration.async
-          const originalFunctionId = identifier(functionName + 'Original')
+            declarationType === 'Identifier'
+              ? path.node.declaration.name
+              : ((declarationType === 'FunctionDeclaration' ||
+                  declarationType === 'FunctionExpression') &&
+                  path.node.declaration.id?.name) ||
+                '__HonoIsladComponent__'
 
-          const originalFunction = functionExpression(
-            null,
-            path.node.declaration.params,
-            path.node.declaration.body.type === 'BlockStatement'
-              ? path.node.declaration.body
-              : blockStatement([returnStatement(path.node.declaration.body)])
-          )
-          if (isAsync) {
-            originalFunction.async = true
+          let originalFunctionId
+          if (declarationType === 'Identifier') {
+            originalFunctionId = path.node.declaration
+          } else {
+            originalFunctionId = identifier(functionName + 'Original')
+
+            const originalFunction = functionExpression(
+              null,
+              path.node.declaration.params,
+              path.node.declaration.body.type === 'BlockStatement'
+                ? path.node.declaration.body
+                : blockStatement([returnStatement(path.node.declaration.body)])
+            )
+            originalFunction.async = path.node.declaration.async
+
+            path.insertBefore(
+              variableDeclaration('const', [
+                variableDeclarator(originalFunctionId, originalFunction),
+              ])
+            )
           }
 
-          path.insertBefore(
-            variableDeclaration('const', [variableDeclarator(originalFunctionId, originalFunction)])
-          )
-
-          const wrappedFunction = addSSRCheck(originalFunctionId.name, componentName, isAsync)
+          const wrappedFunction = addSSRCheck(originalFunctionId.name, componentName)
           const wrappedFunctionId = identifier('Wrapped' + functionName)
+          exports.default = wrappedFunctionId.name
           path.replaceWith(
             variableDeclaration('const', [variableDeclarator(wrappedFunctionId, wrappedFunction)])
           )
-          path.insertAfter(exportDefaultDeclaration(wrappedFunctionId))
         }
       },
     })
+
+    if (Object.keys(exports).length !== 0) {
+      ast.program.body.push(
+        exportNamedDeclaration(
+          null,
+          Object.entries(exports).map(([key, value]) => {
+            return {
+              type: 'ExportSpecifier',
+              exported: identifier(key),
+              local: identifier(value),
+            }
+          })
+        )
+      )
+    }
 
     const { code } = generate(ast)
     return code

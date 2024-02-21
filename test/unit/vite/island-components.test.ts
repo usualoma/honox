@@ -13,7 +13,7 @@ describe('transformJsxTags', () => {
 const WrappedBadge = function (props) {
   return import.meta.env.SSR ? <honox-island component-name="Badge.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><BadgeOriginal {...props}></BadgeOriginal>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <BadgeOriginal {...props}></BadgeOriginal>;
 };
-export default WrappedBadge;`
+export { WrappedBadge as default };`
     )
   })
   it('Should not transform if it is blank', () => {
@@ -33,7 +33,7 @@ export default WrappedBadge;`
 const WrappedAsyncComponent = function (props) {
   return import.meta.env.SSR ? <honox-island component-name="AsyncComponent.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><AsyncComponentOriginal {...props}></AsyncComponentOriginal>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <AsyncComponentOriginal {...props}></AsyncComponentOriginal>;
 };
-export default WrappedAsyncComponent;`
+export { WrappedAsyncComponent as default };`
     )
   })
 
@@ -49,7 +49,7 @@ export default WrappedAsyncComponent;`
 const Wrapped__HonoIsladComponent__ = function (props) {
   return import.meta.env.SSR ? <honox-island component-name="UnnamedComponent.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>;
 };
-export default Wrapped__HonoIsladComponent__;`
+export { Wrapped__HonoIsladComponent__ as default };`
     )
   })
 
@@ -65,7 +65,7 @@ export default Wrapped__HonoIsladComponent__;`
 const Wrapped__HonoIsladComponent__ = function (props) {
   return import.meta.env.SSR ? <honox-island component-name="UnnamedComponent.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>;
 };
-export default Wrapped__HonoIsladComponent__;`
+export { Wrapped__HonoIsladComponent__ as default };`
     )
   })
 
@@ -79,7 +79,18 @@ export default Wrapped__HonoIsladComponent__;`
 const Wrapped__HonoIsladComponent__ = function (props) {
   return import.meta.env.SSR ? <honox-island component-name="UnnamedComponent.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <__HonoIsladComponent__Original {...props}></__HonoIsladComponent__Original>;
 };
-export default Wrapped__HonoIsladComponent__;`
+export { Wrapped__HonoIsladComponent__ as default };`
+    )
+  })
+
+  it('export via variable', () => {
+    const code = 'export default ExportViaVariable'
+    const result = transformJsxTags(code, 'ExportViaVariable.tsx')
+    expect(result).toBe(
+      `const WrappedExportViaVariable = function (props) {
+  return import.meta.env.SSR ? <honox-island component-name="ExportViaVariable.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><ExportViaVariable {...props}></ExportViaVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <ExportViaVariable {...props}></ExportViaVariable>;
+};
+export { WrappedExportViaVariable as default };`
     )
   })
 })
