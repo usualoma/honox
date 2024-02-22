@@ -24,12 +24,12 @@ export const createClient = async (options?: ClientOptions) => {
   const hydrateComponent = async () => {
     const filePromises = Object.keys(FILES).map(async (filePath) => {
       const componentFileName = filePath.replace(root, '')
-      const elements = document.querySelectorAll(`[${COMPONENT_NAME}^="${componentFileName}"]`)
+      const elements = document.querySelectorAll(`[${COMPONENT_NAME}^="${componentFileName}#"]`)
       if (elements) {
         const elementPromises = Array.from(elements).map(async (element) => {
           const fileCallback = FILES[filePath] as FileCallback
           const file = await fileCallback()
-          const name = (element.getAttribute(COMPONENT_NAME) as string).split(/#/)[1] ?? 'default'
+          const name = (element.getAttribute(COMPONENT_NAME) as string).split(/#/)[1] || 'default'
           const Component = file[name]
 
           const serializedProps = element.attributes.getNamedItem(DATA_SERIALIZED_PROPS)?.value

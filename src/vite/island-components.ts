@@ -123,7 +123,10 @@ export const transformJsxTags = (contents: string, componentName: string) => {
       const wrappedFunctionName = 'Wrapped' + functionName
       if (!wrappedFunctions.has(wrappedFunctionName)) {
         wrappedFunctions.add(wrappedFunctionName)
-        const wrappedFunction = addSSRCheck(originalFunctionName, componentName)
+        const wrappedFunction = addSSRCheck(
+          originalFunctionName,
+          componentName.replace(/#default$/, '#')
+        )
         path.insertBefore(
           variableDeclaration('const', [
             variableDeclarator(identifier(wrappedFunctionName), wrappedFunction),
@@ -154,7 +157,7 @@ export const transformJsxTags = (contents: string, componentName: string) => {
               path,
               specifier.local.name,
               specifier.local.name,
-              componentName + (exportAs === 'default' ? '' : `#${exportAs}`)
+              `${componentName}#${exportAs}`
             )
 
             exports[exportAs] = wrappedFunctionName
@@ -211,15 +214,15 @@ export const transformJsxTags = (contents: string, componentName: string) => {
           )
         }
 
+        const exportAs = path.node.type === 'ExportDefaultDeclaration' ? 'default' : functionName
         const wrappedFunctionName = insertWrappedFunction(
           path,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           (originalFunctionId as any).name,
           functionName,
-          componentName
+          `${componentName}#${exportAs}`
         )
-        exports[path.node.type === 'ExportDefaultDeclaration' ? 'default' : functionName] =
-          wrappedFunctionName
+        exports[exportAs] = wrappedFunctionName
         path.remove()
       }
     }
