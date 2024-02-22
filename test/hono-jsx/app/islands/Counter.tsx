@@ -1,7 +1,7 @@
 import type { PropsWithChildren } from 'hono/jsx'
 import { useState } from 'hono/jsx'
 
-export default function Counter({
+function Counter({
   children,
   initial = 0,
   id = '',
@@ -19,3 +19,6 @@ export default function Counter({
     </div>
   )
 }
+
+export default Counter
+export { Counter as NamedCounter }

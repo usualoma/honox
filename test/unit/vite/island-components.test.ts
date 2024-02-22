@@ -143,4 +143,22 @@ const WrappedNamedVariable = function (props) {
 export { WrappedNamedVariable as MyNamedComponent };`
     )
   })
+
+  it('dedupe wrapped functions', () => {
+    const code = `const NamedVariable = () => {
+      return <h1>Hello</h1>
+    }
+    export default NamedVariable
+    export { NamedVariable }`
+    const result = transformJsxTags(code, 'NamedVariable.tsx')
+    expect(result).toBe(
+      `const NamedVariable = () => {
+  return <h1>Hello</h1>;
+};
+const WrappedNamedVariable = function (props) {
+  return import.meta.env.SSR ? <honox-island component-name="NamedVariable.tsx" data-serialized-props={JSON.stringify(Object.fromEntries(Object.entries(props).filter(([key]) => key !== "children")))}><NamedVariable {...props}></NamedVariable>{props.children ? <template data-hono-template="">{props.children}</template> : null}</honox-island> : <NamedVariable {...props}></NamedVariable>;
+};
+export { WrappedNamedVariable as default, WrappedNamedVariable as NamedVariable };`
+    )
+  })
 })

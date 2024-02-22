@@ -112,6 +112,27 @@ export const transformJsxTags = (contents: string, componentName: string) => {
 
   if (ast) {
     const exports: Record<string, string> = {}
+
+    const wrappedFunctions: Set<string> = new Set()
+    const insertWrappedFunction = (
+      path: NodePath,
+      originalFunctionName: string,
+      functionName: string,
+      componentName: string
+    ) => {
+      const wrappedFunctionName = 'Wrapped' + functionName
+      if (!wrappedFunctions.has(wrappedFunctionName)) {
+        wrappedFunctions.add(wrappedFunctionName)
+        const wrappedFunction = addSSRCheck(originalFunctionName, componentName)
+        path.insertBefore(
+          variableDeclaration('const', [
+            variableDeclarator(identifier(wrappedFunctionName), wrappedFunction),
+          ])
+        )
+      }
+      return wrappedFunctionName
+    }
+
     const transformExport = (path: NodePath<ExportNamedDeclaration | ExportDefaultDeclaration>) => {
       const declarationType = path.node.declaration?.type
 
@@ -129,16 +150,14 @@ export const transformJsxTags = (contents: string, componentName: string) => {
                 ? specifier.exported.value
                 : specifier.exported.name
 
-            const wrappedFunction = addSSRCheck(
+            const wrappedFunctionName = insertWrappedFunction(
+              path,
+              specifier.local.name,
               specifier.local.name,
               componentName + (exportAs === 'default' ? '' : `#${exportAs}`)
             )
-            const wrappedFunctionId = identifier('Wrapped' + specifier.local.name)
-            path.insertBefore(
-              variableDeclaration('const', [variableDeclarator(wrappedFunctionId, wrappedFunction)])
-            )
 
-            exports[exportAs] = wrappedFunctionId.name
+            exports[exportAs] = wrappedFunctionName
           }
         }
         path.remove()
@@ -192,14 +211,16 @@ export const transformJsxTags = (contents: string, componentName: string) => {
           )
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const wrappedFunction = addSSRCheck((originalFunctionId as any).name, componentName)
-        const wrappedFunctionId = identifier('Wrapped' + functionName)
-        exports[path.node.type === 'ExportDefaultDeclaration' ? 'default' : functionName] =
-          wrappedFunctionId.name
-        path.replaceWith(
-          variableDeclaration('const', [variableDeclarator(wrappedFunctionId, wrappedFunction)])
+        const wrappedFunctionName = insertWrappedFunction(
+          path,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (originalFunctionId as any).name,
+          functionName,
+          componentName
         )
+        exports[path.node.type === 'ExportDefaultDeclaration' ? 'default' : functionName] =
+          wrappedFunctionName
+        path.remove()
       }
     }
 
