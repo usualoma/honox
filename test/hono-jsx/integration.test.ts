@@ -254,7 +254,7 @@ describe('With preserved', () => {
     expect(res.status).toBe(200)
     // hono/jsx escape a single quote to &#39;
     expect(await res.text()).toBe(
-      '<!DOCTYPE html><html><head><title></title></head><body><honox-island component-name="Counter.tsx" data-serialized-props="{&quot;initial&quot;:5}"><div id=""><p>Count: 5</p><button>Increment</button></div></honox-island><script type="module" async="" src="/app/client.ts"></script></body></html>'
+      '<!DOCTYPE html><html><head><title></title></head><body><honox-island component-name="Counter.tsx#" data-serialized-props="{&quot;initial&quot;:5,&quot;id&quot;:&quot;default&quot;}"><div id="default"><p>Count: 5</p><button>Increment</button></div></honox-island><honox-island component-name="Counter.tsx#" data-serialized-props="{&quot;initial&quot;:10,&quot;id&quot;:&quot;named&quot;}"><div id="named"><p>Count: 10</p><button>Increment</button></div></honox-island><script type="module" async="" src="/app/client.ts"></script></body></html>'
     )
   })
 
@@ -403,7 +403,7 @@ describe('<Script /> component', () => {
       const res = await app.request('/')
       expect(res.status).toBe(200)
       expect(await res.text()).toBe(
-        '<html><head><script type="module" src="/static/client-abc.js"></script></head><body><main><honox-island component-name="Component.tsx" data-serialized-props="{}"><p>Component</p></honox-island></main></body></html>'
+        '<html><head><script type="module" src="/static/client-abc.js"></script></head><body><main><honox-island component-name="Component.tsx#" data-serialized-props="{}"><p>Component</p></honox-island></main></body></html>'
       )
     })
   })
@@ -423,7 +423,7 @@ describe('<Script /> component', () => {
       const res = await app.request('/')
       expect(res.status).toBe(200)
       expect(await res.text()).toBe(
-        '<html><body><main><honox-island component-name="Component.tsx" data-serialized-props="{}"><p>Component</p></honox-island></main><script type="module" async="" src="/static/client-abc.js"></script></body></html>'
+        '<html><body><main><honox-island component-name="Component.tsx#" data-serialized-props="{}"><p>Component</p></honox-island></main><script type="module" async="" src="/static/client-abc.js"></script></body></html>'
       )
     })
   })
