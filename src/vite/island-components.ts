@@ -196,13 +196,13 @@ export function islandComponents(options?: IslandComponentsOptions): Plugin {
     },
 
     async load(id) {
-      if (/\/honox\/.*?\/vite\/components\//.test(id)) {
+      if (/\/honox\/.*?\/(?:server|vite)\/components\//.test(id)) {
         if (!reactApiImportSource) {
           return
         }
         const contents = await fs.readFile(id, 'utf-8')
         return {
-          code: contents.replaceAll('hono/jsx', reactApiImportSource),
+          code: contents.replace(/hono\/jsx([\/'"])/g, `${reactApiImportSource}$1`),
           map: null,
         }
       }
