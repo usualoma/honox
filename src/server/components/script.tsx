@@ -1,3 +1,4 @@
+import type { Context } from 'hono'
 import type { Manifest } from 'vite'
 import { HasIslands } from './has-islands.js'
 
@@ -7,6 +8,7 @@ type Options = {
   prod?: boolean
   manifest?: Manifest
   nonce?: string
+  context?: Context
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,7 +31,7 @@ export const Script = (options: Options): any => {
       const scriptInManifest = manifest[src.replace(/^\//, '')]
       if (scriptInManifest) {
         return (
-          <HasIslands>
+          <HasIslands context={options.context}>
             <script
               type='module'
               async={!!options.async}
